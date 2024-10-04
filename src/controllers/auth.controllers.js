@@ -1,6 +1,8 @@
 import { createAccessToken } from "../libs/jwt.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken"
+import { TOKEN_SECRET } from "../config.js";
 
 export const register = async (req, res) => {
   try {
@@ -18,8 +20,15 @@ export const register = async (req, res) => {
     const userSaved = await newUser.save();
 
     const token = await createAccessToken({ id: userSaved._id });
-    res.cookie("token", token, {httpOnly: true, sameSite: "none" });
-    res.json({...userSaved, token:token});
+
+    res.json({
+      _id: userSaved._id,
+      name: userSaved.name,
+      email: userSaved.email,
+      createdAt: userSaved.createdAt,
+      updatedAt: userSaved.updatedAt,
+      token: token,
+    });
   } catch (err) {}
 };
 
@@ -36,30 +45,30 @@ export const login = async (req, res) => {
 
     const token = await createAccessToken({ id: userFound._id });
 
-    res.cookie("token", token, {httpOnly: true, sameSite: "none" });
-    res.json(userFound);
+    res.json({
+      _id: userFound._id,
+      name: userFound.name,
+      email: userFound.email,
+      createdAt: userFound.createdAt,
+      updatedAt: userFound.updatedAt,
+      token: token,
+    });
   } catch (error) {
     return res.status(500).json([error.message]);
   }
 };
 
 export const logout = async (req, res) => {
-  res.cookie("token", "", {
-    httpOnly: true,
-    secure: true,
-    expires: new Date(0),
-  });
-  return res.sendStatus(200);
+  res.send("logout")
 };
 
-export const verifyToken = async (req, res) => {
-  const { token } = req.cookies;
 
+export const verifyToken = async (req, res) => {
+  const { token } = req.body;
   if (!token) return res.status(401).json(["No Autorizado"]);
 
   jwt.verify(token, TOKEN_SECRET, async (err, user) => {
     if (err) return res.status(401).json(["No Autorizado"]);
-
     const userFound = await User.findById(user.id);
     if (!userFound) return res.status(401).json(["No Autorizado"]);
 
@@ -67,6 +76,7 @@ export const verifyToken = async (req, res) => {
       id: userFound.id,
       name: userFound.name,
       email: userFound.email,
+      token
     });
   });
 };

@@ -7,6 +7,6 @@ const router = Router()
 
 router.post("/register",validateSchema(registerSchema), register)
 router.post("/login",validateSchema(loginSchema), login)
-router.get("/verify", verifyToken)
+router.post("/verify", verifyToken)
 
 export default router
