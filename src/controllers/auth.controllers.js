@@ -20,15 +20,8 @@ export const register = async (req, res) => {
     const userSaved = await newUser.save();
 
     const token = await createAccessToken({ id: userSaved._id });
-
-    res.json({
-      _id: userSaved._id,
-      name: userSaved.name,
-      email: userSaved.email,
-      createdAt: userSaved.createdAt,
-      updatedAt: userSaved.updatedAt,
-      token: token,
-    });
+    res.cookie("token", token, {httpOnly: true, sameSite: "none" });
+    res.json(userSaved);
   } catch (err) {}
 };
 
@@ -45,30 +38,30 @@ export const login = async (req, res) => {
 
     const token = await createAccessToken({ id: userFound._id });
 
-    res.json({
-      _id: userFound._id,
-      name: userFound.name,
-      email: userFound.email,
-      createdAt: userFound.createdAt,
-      updatedAt: userFound.updatedAt,
-      token: token,
-    });
+    res.cookie("token", token, {httpOnly: true, sameSite: "none" });
+    res.json(userFound);
   } catch (error) {
     return res.status(500).json([error.message]);
   }
 };
 
 export const logout = async (req, res) => {
-  res.send("logout")
+  res.cookie("token", "", {
+    httpOnly: true,
+    secure: true,
+    expires: new Date(0),
+  });
+  return res.sendStatus(200);
 };
 
-
 export const verifyToken = async (req, res) => {
-  const { token } = req.body;
+  const { token } = req.cookies;
+
   if (!token) return res.status(401).json(["No Autorizado"]);
 
   jwt.verify(token, TOKEN_SECRET, async (err, user) => {
     if (err) return res.status(401).json(["No Autorizado"]);
+
     const userFound = await User.findById(user.id);
     if (!userFound) return res.status(401).json(["No Autorizado"]);
 
@@ -76,7 +69,6 @@ export const verifyToken = async (req, res) => {
       id: userFound.id,
       name: userFound.name,
       email: userFound.email,
-      token
     });
   });
 };
