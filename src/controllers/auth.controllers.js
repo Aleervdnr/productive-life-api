@@ -1,7 +1,7 @@
 import { createAccessToken } from "../libs/jwt.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 import { TOKEN_SECRET } from "../config.js";
 
 export const register = async (req, res) => {
@@ -20,7 +20,7 @@ export const register = async (req, res) => {
     const userSaved = await newUser.save();
 
     const token = await createAccessToken({ id: userSaved._id });
-    res.cookie("token", token);
+    res.cookie("token", token, { sameSite: "None", secure: true });
     res.json(userSaved);
   } catch (err) {}
 };
@@ -38,7 +38,7 @@ export const login = async (req, res) => {
 
     const token = await createAccessToken({ id: userFound._id });
 
-    res.cookie("token", token);
+    res.cookie("token", token, { sameSite: "None", secure: true });
     res.json(userFound);
   } catch (error) {
     return res.status(500).json([error.message]);
