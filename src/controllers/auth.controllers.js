@@ -20,8 +20,14 @@ export const register = async (req, res) => {
     const userSaved = await newUser.save();
 
     const token = await createAccessToken({ id: userSaved._id });
-    res.cookie("token", token, { sameSite: "None", secure: true });
-    res.json(userSaved);
+    res.json({
+      _id: userSaved._id,
+      name: userSaved.name,
+      email: userSaved.email,
+      createdAt: userSaved.createdAt,
+      updateAt: userSaved.updatedAt,
+      token: token
+    });
   } catch (err) {}
 };
 
@@ -38,13 +44,14 @@ export const login = async (req, res) => {
 
     const token = await createAccessToken({ id: userFound._id });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "None",
-      secure: true,
-      domain:".onrender.com",
+    res.json({
+      _id: userFound._id,
+      name: userFound.name,
+      email: userFound.email,
+      createdAt: userFound.createdAt,
+      updateAt: userFound.updatedAt,
+      token: token
     });
-    res.json(userFound);
   } catch (error) {
     return res.status(500).json([error.message]);
   }
@@ -60,7 +67,8 @@ export const logout = async (req, res) => {
 };
 
 export const verifyToken = async (req, res) => {
-  const { token } = req.cookies;
+  console.log(req.headers)
+  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
 
   if (!token) return res.status(401).json(["No Autorizado"]);
 
