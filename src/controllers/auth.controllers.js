@@ -38,7 +38,12 @@ export const login = async (req, res) => {
 
     const token = await createAccessToken({ id: userFound._id });
 
-    res.cookie("token", token, { sameSite: "None", secure: true });
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+      domain:".onrender.com",
+    });
     res.json(userFound);
   } catch (error) {
     return res.status(500).json([error.message]);
